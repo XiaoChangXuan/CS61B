@@ -1,0 +1,6 @@
+path/to/your/large/file.json filter=lfs diff=lfs merge=lfs -text
+anaconda3/pkgs/cache/09cdf8bf.json filter=lfs diff=lfs merge=lfs -text
+anaconda3/pkgs/cache/497deca9.json filter=lfs diff=lfs merge=lfs -text
+../anaconda3/pkgs/cache/09cdf8bf.json filter=lfs diff=lfs merge=lfs -text
+../anaconda3/pkgs/cache/497deca9.json filter=lfs diff=lfs merge=lfs -text
+../ics2022 filter=lfs diff=lfs merge=lfs -text

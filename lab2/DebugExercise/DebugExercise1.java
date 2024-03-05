@@ -7,8 +7,7 @@ package DebugExercise;
 public class DebugExercise1 {
     public static int divideThenRound(float top, float bottom) {
         float quotient = top / bottom;
-        int result = Math.round(quotient);
-        return result;
+        return Math.round(quotient);
     }
 
     public static void main(String[] args) {

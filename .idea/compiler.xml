@@ -19,5 +19,6 @@
         <module name="proj1ec" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel target="8" />
   </component>
 </project>

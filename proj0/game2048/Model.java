@@ -109,42 +109,44 @@ public class Model extends Observable {
      *    and the trailing tile does not.
      * */
     public boolean tilt(Side side) {
-        boolean changed;
+        boolean changed = false;
 
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
-        changed = atLeastOneMoveExists(this.board);
-        if(changed){
-            boolean change_view = false;
-            if(side != Side.NORTH) change_view = true;
+
+        boolean change_view = false;
+        if(Side.NORTH != side){
+            change_view = true;
             this.board.setViewingPerspective(side);
-            int board_size = board.size();
-            for(int col = 0; col < board_size; col++){
-                for(int row = board_size - 2, move_row = board_size - 1; row >= 0; row--){
-                    Tile cur_tile = tile(col, row);
-                    // 当前为空则跳过
-                    if (cur_tile == null) continue;
-                    // this.maxScore = Math.max(this.maxScore, cur_tile.value());
-                    // 查看可以移动位置的tile,为空或者和当前相等则移动
-                    Tile move_tile = tile(col, move_row);
-                    if(move_tile == null){
-                        this.board.move(col, move_row, cur_tile);
-                    } else if (cur_tile.value() == move_tile.value()) {
-                        // this.maxScore = Math.max(this.maxScore, cur_tile.value() * 2);
-                        this.score += cur_tile.value() * 2;
-                        this.board.move(col, move_row, cur_tile);
-                        move_row--;
-                    } else {
-                        move_row--;
-                        this.board.move(col, move_row, cur_tile);
-                    }
+        }
+        int board_size = board.size();
+        for(int col = 0; col < board_size; col++) {
+            for (int row = board_size - 2, move_row = board_size - 1; row >= 0; row--) {
+                Tile cur_tile = tile(col, row);
+                // 当前为空则跳过
+                if (cur_tile == null) continue;
+                // this.maxScore = Math.max(this.maxScore, cur_tile.value());
+                // 查看可以移动位置的tile,为空或者和当前相等则移动
+                Tile move_tile = tile(col, move_row);
+                if (move_tile == null) {
+                    this.board.move(col, move_row, cur_tile);
+                } else if (cur_tile.value() == move_tile.value()) {
+                    // this.maxScore = Math.max(this.maxScore, cur_tile.value() * 2);
+                    this.score += cur_tile.value() * 2;
+                    this.board.move(col, move_row, cur_tile);
+                    move_row--;
+                } else {
+                    move_row--;
+                    this.board.move(col, move_row, cur_tile);
                 }
-            }
-            if(change_view) {
-                this.board.setViewingPerspective(Side.NORTH);
+                changed = true;
             }
         }
+        if(change_view) {
+            this.board.setViewingPerspective(Side.NORTH);
+        }
+
         checkGameOver();
         if (changed) {
             setChanged();

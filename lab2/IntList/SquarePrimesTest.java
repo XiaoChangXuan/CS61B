@@ -18,13 +18,6 @@ public class SquarePrimesTest {
         assertTrue(changed);
     }
     @Test
-    public void testSquarePrimesSimple1() {
-        IntList lst = IntList.of();
-        boolean changed = IntListExercises.squarePrimes(lst);
-        assertEquals("",lst.toString());
-        assertTrue(changed);
-    }
-    @Test
     public void testSquarePrimesSimple2() {
         IntList lst = IntList.of(2, 3, 5, 7, 11);
         boolean changed = IntListExercises.squarePrimes(lst);

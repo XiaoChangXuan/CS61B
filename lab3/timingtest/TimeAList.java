@@ -29,7 +29,7 @@ public class TimeAList {
         AList<Integer> opCounts = new AList<Integer>();
 
         int N = 1000;
-        int test_times = 100;
+        int test_times = 10;
         int timing_table_length = 8;
 
         for(int i = 0; i < timing_table_length; i++){

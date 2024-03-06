@@ -42,6 +42,10 @@ public class LinkedListDeque<Item> {
         if(temp_node.next != null){
             temp_node.next.front = temp_node;
         }
+        if(size == 0){
+            rear = temp_node;
+        }
+        size += 1;
     }
 
     public void addLast(Item x){

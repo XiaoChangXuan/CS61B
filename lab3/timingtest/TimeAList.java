@@ -29,7 +29,7 @@ public class TimeAList {
         AList<Integer> opCounts = new AList<Integer>();
 
         int N = 1000;
-        int test_times = 10;
+        int test_times = 30;
         int timing_table_length = 8;
 
         for(int i = 0; i < timing_table_length; i++){
@@ -41,6 +41,7 @@ public class TimeAList {
                 for(int j = 0; j < N; j ++){
                     testList.addLast(0);
                 }
+                testList = new AList<Integer>();
             }
             double sum_timeInSeconds = sw.getElapsed();
             double timeInSeconds = sum_timeInSeconds / test_times;

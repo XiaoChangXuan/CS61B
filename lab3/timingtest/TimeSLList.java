@@ -29,24 +29,31 @@ public class TimeSLList {
         AList<Integer> opCounts = new AList<Integer>();
 
         int N = 1000;
-        int test_times = 10;
+        int M = 10000;
+        int test_times = 1;
         int timing_table_length = 8;
-
         for(int i = 0; i < timing_table_length; i++){
-            ucb.util.Stopwatch sw = new Stopwatch();
+            // create an SLList
+            SLList<Integer> testList = new SLList<Integer>();
+            // Add N items to the SLList
+            for(int j = 0; j < N; j ++){
+                testList.addLast(0);
+            }
+            // Start the timer
+            Stopwatch sw = new Stopwatch();
             sw.start();
             // add test a list
-            SLList<Integer> testList = new SLList<Integer>();
-            for(int temp = 0; temp < test_times; temp++){
-                for(int j = 0; j < N; j ++){
-                    testList.addFirst(0);
+            for(int h = 0; h < test_times; h++) {
+                for (int op = 0; op < M; op++) {
+                    testList.getLast();
                 }
+                testList = new SLList<Integer>();
             }
             double sum_timeInSeconds = sw.getElapsed();
-            double timeInSeconds = sum_timeInSeconds / test_times;
+            double timeInSeconds = sum_timeInSeconds / (M * test_times);
             Ns.addLast(N);
             times.addLast(timeInSeconds);
-            opCounts.addLast(N);
+            opCounts.addLast(M);
 
             N *= 2;
         }

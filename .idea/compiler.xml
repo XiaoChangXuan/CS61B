@@ -9,7 +9,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="17">
-      <module name="cs61b1" target="" />
+      <module name="cs61b" target="" />
     </bytecodeTargetLevel>
   </component>
 </project>

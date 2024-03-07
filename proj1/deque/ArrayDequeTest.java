@@ -212,4 +212,6 @@ public class ArrayDequeTest {
         assertTrue(deque1.equals(deque2));  // Same elements, same order
         assertFalse(deque1.equals(deque3)); // Different elements
     }
+
+
 }

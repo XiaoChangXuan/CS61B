@@ -17,6 +17,12 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="library-sp21" level="project" />
+    <orderEntry type="library" exported="" name="library-sp212" level="project" />
+    <orderEntry type="library" exported="" name="stdlib-package.jar-1.0" level="project" />
+    <orderEntry type="library" exported="" name="PNHucb-f2007.jar-1.0" level="project" />
+    <orderEntry type="library" exported="" name="ucb.jar-1.0" level="project" />
+    <orderEntry type="library" exported="" name="algs4.jar-1.0" level="project" />
+    <orderEntry type="library" exported="" name="junit-4.12.jar-4.12" level="project" />
+    <orderEntry type="library" exported="" name="PNHucb.jar-1.0" level="project" />
   </component>
 </module>

@@ -1,8 +1,9 @@
 package deque;
 import java.util.NoSuchElementException;
 import java.util.Iterator;
+import java.util.Objects;
 
-public class ArrayDeque<T> implements Deque<T>{
+public class ArrayDeque<T> implements Deque<T> {
     private T[] items;
     private int size;
     private int front;
@@ -22,10 +23,6 @@ public class ArrayDeque<T> implements Deque<T>{
     public int size() {
         return size;
     }
-
-//    public boolean isEmpty() {
-//        return size == 0;
-//    }
     @Override
     public void addFirst(T item) {
         if (size == items.length) {
@@ -88,15 +85,7 @@ public class ArrayDeque<T> implements Deque<T>{
         }
         System.out.println();
     }
-    public void resize(int capacity) {
-        T[] newItems = (T[]) new Object[capacity];
-        for (int i = 0; i < size; i++) {
-            newItems[i] = items[(front + i) % items.length];
-        }
-        items = newItems;
-        front = 0;
-        rear = size;
-    }
+    @Override
     public Iterator<T> iterator() {
         return new ArrayDequeIterator();
     }
@@ -119,27 +108,34 @@ public class ArrayDeque<T> implements Deque<T>{
             throw new UnsupportedOperationException();
         }
     }
+    @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
         }
-        if (!(o instanceof ArrayDeque)) {
+        if (!(o instanceof Deque<?> other)) {
             return false;
         }
-        ArrayDeque<?> other = (ArrayDeque<?>) o;
         if (other.size() != this.size()) {
             return false;
         }
         for (int i = 0; i < size; i++) {
             T thisItem = this.get(i);
             Object otherItem = other.get(i);
-            if (thisItem == null && otherItem != null) {
-                return false;
-            }
-            if (thisItem != null && !thisItem.equals(otherItem)) {
+            if (!(Objects.equals(thisItem, otherItem))) {
                 return false;
             }
         }
         return true;
+    }
+
+    private void resize(int capacity) {
+        T[] newItems = (T[]) new Object[capacity];
+        for (int i = 0; i < size; i++) {
+            newItems[i] = items[(front + i) % items.length];
+        }
+        items = newItems;
+        front = 0;
+        rear = size;
     }
 }

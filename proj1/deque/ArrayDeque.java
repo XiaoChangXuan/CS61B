@@ -85,7 +85,6 @@ public class ArrayDeque<T> implements Deque<T> {
         }
         System.out.println();
     }
-    @Override
     public Iterator<T> iterator() {
         return new ArrayDequeIterator();
     }
@@ -108,14 +107,14 @@ public class ArrayDeque<T> implements Deque<T> {
             throw new UnsupportedOperationException();
         }
     }
-    @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
         }
-        if (!(o instanceof Deque<?> other)) {
+        if (!(o instanceof Deque<?>)) {
             return false;
         }
+        Deque<?> other = (Deque<?>) o;
         if (other.size() != this.size()) {
             return false;
         }

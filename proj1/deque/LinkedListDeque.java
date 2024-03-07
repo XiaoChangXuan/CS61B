@@ -108,7 +108,7 @@ public class LinkedListDeque<T> implements Deque<T> {
         }
         System.out.println();
     }
-    @Override
+
     public Iterator<T> iterator() {
         return new DequeIterator();
     }
@@ -132,14 +132,15 @@ public class LinkedListDeque<T> implements Deque<T> {
             throw new UnsupportedOperationException();
         }
     }
-    @Override
+
     public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof Deque<?> other)) {
+        if (!(o instanceof Deque<?>)) {
             return false;
         }
+        Deque<?> other = (Deque<?>) o;
         if (this.size() != other.size()) {
             return false;
         }

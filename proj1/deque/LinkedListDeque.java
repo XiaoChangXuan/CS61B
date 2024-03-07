@@ -9,7 +9,7 @@ public class LinkedListDeque<T> implements Deque<T> {
         private Node prev;
         private Node next;
 
-        public Node(T item, Node prev, Node next) {
+        Node(T item, Node prev, Node next) {
             this.item = item;
             this.prev = prev;
             this.next = next;
@@ -28,7 +28,7 @@ public class LinkedListDeque<T> implements Deque<T> {
         size = 0;
     }
     @Override
-    public int size(){
+    public int size() {
         return size;
     }
     @Override
@@ -47,7 +47,7 @@ public class LinkedListDeque<T> implements Deque<T> {
     @Override
     public void addFirst(T x) {
         Node tempNode = new Node(x, front, front.next);
-        if (this.isEmpty()){
+        if (this.isEmpty()) {
             rear = tempNode;
         } else {
             front.next.prev = tempNode;
@@ -57,11 +57,11 @@ public class LinkedListDeque<T> implements Deque<T> {
     }
     @Override
     public void addLast(T x) {
-        Node temp_node = new Node(x, rear, null);
-        rear.next = temp_node;
-        rear = temp_node;
-        if (this.isEmpty()){
-            rear = temp_node;
+        Node tempNode = new Node(x, rear, null);
+        rear.next = tempNode;
+        rear = tempNode;
+        if (this.isEmpty()) {
+            rear = tempNode;
         }
         size++;
     }

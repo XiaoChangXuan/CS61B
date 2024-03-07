@@ -1,5 +1,4 @@
 package deque;
-
 import java.util.Iterator;
 
 public interface Deque<T> {
@@ -10,7 +9,7 @@ public interface Deque<T> {
     T removeFirst();
     T removeLast();
     T get(int index);
-
+    Iterator<T> iterator();
     default boolean isEmpty() {
         return size() == 0;
     }

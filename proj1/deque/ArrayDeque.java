@@ -85,6 +85,7 @@ public class ArrayDeque<T> implements Deque<T> {
         }
         System.out.println();
     }
+    @Override
     public Iterator<T> iterator() {
         return new ArrayDequeIterator();
     }

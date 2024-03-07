@@ -6,8 +6,8 @@
       <sourceFolder url="file://$MODULE_DIR$/lab1" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/proj0" isTestSource="false" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="library" exported="" name="library-sp21" level="project" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="library-sp21" level="project" />
+    <orderEntry type="inheritedJdk" />
   </component>
 </module>

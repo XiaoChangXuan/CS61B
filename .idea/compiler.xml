@@ -6,19 +6,10 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="lab2setup" />
-        <module name="lab3" />
-        <module name="lab4" />
-        <module name="lab2" />
-        <module name="lab7" />
-        <module name="lab8" />
-        <module name="proj3" />
-        <module name="proj2" />
-        <module name="lab6" />
-        <module name="proj1" />
-        <module name="proj1ec" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="21" />
+    <bytecodeTargetLevel target="17">
+      <module name="cs61b1" target="" />
+    </bytecodeTargetLevel>
   </component>
 </project>

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="checkstyle-5.9-all.jar-5.9">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/library-sp21/CS61B/checkstyle-5.9-all.jar/5.9/checkstyle-5.9-all.jar-5.9.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

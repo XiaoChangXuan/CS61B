@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="gjdb.jar-1.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/library-sp21/CS61B/gjdb.jar/1.0/gjdb.jar-1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

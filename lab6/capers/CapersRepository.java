@@ -47,7 +47,10 @@ public class CapersRepository {
      */
     public static void writeStory(String text) {
         File storyFile = STORY_FOLD;
-        writeObject(storyFile, text);
+        String storyContent = Utils.readContentsAsString(storyFile);
+        String newText = storyContent.isBlank() ? text : storyContent + "\n" + text;
+        Utils.writeContents(storyFile, newText);
+        System.out.println(newText);
     }
 
     /**

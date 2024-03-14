@@ -45,11 +45,7 @@ public class Main {
                 /* 这个调用已经为您处理了。其余的将类似。 */
                 validateNumArgs("story", args, 2);
                 String text = args[1].replaceAll("\"", "");
-                File storyFile = CapersRepository.STORY_FOLD;
-                String storyContent = Utils.readContentsAsString(storyFile);
-                String newText = storyContent.isBlank() ? text : storyContent + "\n" + text;
-                Utils.writeContents(storyFile, newText);
-                System.out.println(newText);
+                CapersRepository.writeStory(text);
                 break;
             case "dog":
                 validateNumArgs("dog", args, 4);

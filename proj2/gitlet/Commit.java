@@ -1,26 +1,97 @@
 package gitlet;
 
-// TODO: any imports you need here
+import static gitlet.Utils.*;
+import java.io.File;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
 
-import java.util.Date; // TODO: You'll likely use this in this class
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
+ *  @author XiaoChangXuan
  */
-public class Commit {
-    /**
-     * TODO: add instance variables here.
-     *
-     * List all instance variables of the Commit class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided one example for `message`.
+public class Commit implements Serializable{
+    /** Represents a gitlet commit object.
+    *  This class represents a commit in the version control system.
+    *  Each commit has a unique ID, a message, a timestamp, and possibly
+    *  other properties depending on the implementation.
+    *
      */
-
+    static final File COMIT_FOLDER = Repository.COMMIT_FOLDER;
     /** The message of this Commit. */
-    private String message;
+    private final String message;
+    /** The timestamp of this Commit. */
+    private final String timestamp;
+    /** The unique ID (hash) of this Commit. */
+    private final String commitID;
+    /** The parent commit of this Commit. */
+    private final String parentCommit;
+    /** The files included in this Commit. */
+    private final TreeMap<String, String> files;
+    /** Constructor for a new Commit.
+     *  @param message The commit message.
+     *  @param timestamp The commit timestamp.
+     *  @param parentCommit The parent commit of this commit.
+     */
+    public Commit(String message, String timestamp,
+                  String parentCommit, TreeMap<String, String> files) {
+        this.message = message;
+        this.timestamp = timestamp;
+        this.parentCommit = parentCommit;
+        this.files = files;
+        this.commitID = createCommitId();
+    }
+    private String createCommitId() {
+        List<Object> vals = new ArrayList<>();
+        vals.add(message);
+        vals.add(timestamp);
+        if (parentCommit != null) {
+            vals.add(parentCommit);
+        }
+        if (files != null) {
+            vals.addAll(files.values());
+        }
+        return sha1(vals);
+    }
 
-    /* TODO: fill in the rest of this class. */
+    public String getMessage() {
+        return this.message;
+    }
+    public String getTimestamp() {
+        return this.timestamp;
+    }
+    public String getCommitID() {
+        return this.commitID;
+    }
+    public String getParentCommit() {
+        return this.parentCommit;
+    }
+    public TreeMap<String, String> getFiles() {
+        return this.files;
+    }
+    public String getBlobId(String fileName) {
+        return files == null ? null: files.get(fileName);
+    }
+    /**
+     * @param commitID Name of commitId to load
+     * @return commit read from file
+     */
+    public static Commit fromFile(String commitID) {
+        if (commitID == null) {
+            return null;
+        }
+        File commit = new File(COMIT_FOLDER, commitID);
+        return readObject(commit, Commit.class);
+    }
+    /**
+     * 保存commit为文件
+     */
+    public void saveCommit() {
+        File commit = new File(COMIT_FOLDER, commitID);
+        writeObject(commit, this);
+    }
 }
+

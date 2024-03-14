@@ -13,7 +13,7 @@ import java.util.TreeMap;
  *
  *  @author XiaoChangXuan
  */
-public class Commit implements Serializable{
+public class Commit implements Serializable {
     /** Represents a gitlet commit object.
     *  This class represents a commit in the version control system.
     *  Each commit has a unique ID, a message, a timestamp, and possibly
@@ -73,7 +73,7 @@ public class Commit implements Serializable{
         return this.files;
     }
     public String getBlobId(String fileName) {
-        return files == null ? null: files.get(fileName);
+        return files == null ? null : files.get(fileName);
     }
     /**
      * @param commitID Name of commitId to load

@@ -3,7 +3,6 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
 import static gitlet.Utils.*;
 public class Blob implements Serializable {
     /** 每个文件对应一个Bolb, 保存文件的名称, 内容 Sring格式, 相同的文件具有相同的Id*/
@@ -23,14 +22,9 @@ public class Blob implements Serializable {
         vales.add(content);
         return sha1(vales);
     }
-    public String getFileName() {
-        return fileName;
-    }
-
     public String getContent() {
         return content;
     }
-
     public String getBlobId() {
         return blobId;
     }

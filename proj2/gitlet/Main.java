@@ -1,8 +1,6 @@
 package gitlet;
 
 import static gitlet.Utils.myException;
-import static gitlet.Utils.readContentsAsString;
-
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author XiaoChangXuan
  */
@@ -12,10 +10,9 @@ public class Main {
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
     public static void main(String[] args) {
-        myException(args == null || args.length == 0,"Please enter a command.");
-        String firstArg = args[0];
+        myException(args == null || args.length == 0, "Please enter a command.");
         String fileName, message, branchName, commitId;
-        switch(firstArg) {
+        switch (args[0]) {
             case "init":
                 validateNumArgs(args, 1);
                 Repository.gitletInitial();
@@ -26,7 +23,7 @@ public class Main {
                 Repository.gitletAddFile(fileName);
                 break;
             case "commit":
-                myException(args.length == 1,"Please enter a commit message.");
+                myException(args.length == 1, "Please enter a commit message.");
                 validateNumArgs(args, 2);
                 message = args[1];
                 Repository.gitletCommit(message);
@@ -75,8 +72,7 @@ public class Main {
                     branchName = args[1];
                     Repository.gitletCheckoutBranch(branchName);
                 } else {
-                    throw new GitletException(
-                            "Incorrect operands.");
+                    throw new GitletException("Incorrect operands.");
                 }
                 break;
             case "reset":
@@ -85,14 +81,12 @@ public class Main {
                 Repository.gitletReset(commitId);
                 break;
             case "merge":
-                 validateNumArgs(args, 2);
-                 branchName = args[1];
-                 Repository.gitletMerge(branchName);
-                //Repository.testMergeFile();
+                validateNumArgs(args, 2);
+                branchName = args[1];
+                Repository.gitletMerge(branchName);
                 break;
             default:
-                throw new GitletException(
-                        "No command with that name exists.");
+                throw new GitletException("No command with that name exists.");
         }
     }
     public static void validateNumArgs(String[] args, int n) {

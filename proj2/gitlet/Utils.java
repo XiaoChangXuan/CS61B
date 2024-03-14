@@ -236,9 +236,10 @@ class Utils {
         System.out.println();
     }
 
-    static void myException(boolean bool, String message) {
+    static void exitPrintMessage(boolean bool, String message) {
         if (bool) {
-            throw new GitletException(message);
+            System.out.println(message);
+            System.exit(0);
         }
     }
 }

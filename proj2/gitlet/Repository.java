@@ -2,7 +2,6 @@ package gitlet;
 
 import java.io.File;
 import static gitlet.Utils.*;
-
 import java.io.IOException;
 import java.util.*;
 import java.text.SimpleDateFormat;
@@ -30,7 +29,8 @@ public class Repository {
     public static final File BOLB_FOLDER = join(GITLET_DIR, ".bolbs");
     public static final File BRANCHE_FOLDER = join(GITLET_DIR, ".branches");
     public static final File CUR_BRANCHES = join(GITLET_DIR, "curbranch");
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z");
+    private static final SimpleDateFormat DATE_FORMAT =
+            new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z");
     /**
      * 进行必要的文件系统操作以允许持久性。
      * (创建任何必要的文件夹或文件)
@@ -60,25 +60,28 @@ public class Repository {
         File gitletDir = GITLET_DIR;
         boolean initial = gitletDir.exists() && gitletDir.isDirectory();
         if (init == null) {
-            myException(!initial, "Not in an initialized Gitlet directory.");
+            exitPrintMessage(!initial, "Not in an initialized Gitlet directory.");
         } else {
-            myException(initial, "A Gitlet version-control system already exists in the current directory.");
+            exitPrintMessage(initial,
+                    "A Gitlet version-control system already exists in the current directory.");
         }
     }
     private static void isHaveUnTrackedFile() {
         List<String> unTrackedFileNames = getPathNamesList(CWD);
+        List<String> stageFiles = getPathNamesList(STAGING_AREA);
         unTrackedFileNames.removeIf(file -> gitletCurCommit().getFiles().containsKey(file)
-                || gitletCurBranch().getRemoveFile().contains(file));
-        myException(!unTrackedFileNames.isEmpty(), "There is an untracked file in the way; delete it, or add and commit it first.");
+                || gitletCurBranch().getRemoveFile().contains(file) || stageFiles.contains(file));
+        exitPrintMessage(!unTrackedFileNames.isEmpty(),
+                "There is an untracked file in the way; delete it, or add and commit it first.");
     }
     private static boolean isHaveBranch(String branchName) {
         List<String> branches = getPathNamesList(BRANCHE_FOLDER);
         return !branches.contains(branchName);
     }
-    private static boolean workFileIsNotCommitFile(String fileName, File workFile) {
-        myException(!workFile.exists() || workFile.isDirectory(), "File does not exist.");
+    private static boolean fileIsNotCommitFile(String fileName, File file) {
+        exitPrintMessage(!file.exists() || file.isDirectory(), "File does not exist.");
         Blob commitBold = gitletBold(fileName);
-        String content = readContentsAsString(workFile);
+        String content = readContentsAsString(file);
         Blob workBold = new Blob(fileName, content);
         return commitBold == null || !Objects.equals(commitBold.getBlobId(), workBold.getBlobId());
     }
@@ -96,17 +99,22 @@ public class Repository {
     }
     private static void printLog(Commit commit) {
         String commitId = commit.getCommitID();
+        String merge = commit.getMerge();
         String data = commit.getTimestamp();
         String message = commit.getMessage();
         System.out.println("===");
+        if (merge != null) {
+            System.out.println("Merge: " + merge);
+        }
         System.out.println("commit " + commitId);
         System.out.println("Date: " + data);
         System.out.println(message);
-        System.out.println(); // 打印merge未完成
+        System.out.println();
     }
     private static List<String> getPathNamesList(File path) {
-        return (plainFilenamesIn(path) == null)
-                ? new ArrayList<>() : new ArrayList<>(Objects.requireNonNull(plainFilenamesIn(path)));
+        List<String> nameList = plainFilenamesIn(path);
+        return (nameList == null)
+                ? new ArrayList<>() : new ArrayList<>(Objects.requireNonNull(nameList));
     }
     private static void clearPathFiles() {
         List<String> curWorkFileNames = getPathNamesList(Repository.CWD);
@@ -132,7 +140,7 @@ public class Repository {
         setupPersistence();
         String message = "initial commit";
         String timestamp = DATE_FORMAT.format(new Date(0));
-        Commit commit = new Commit(message, timestamp, null, new TreeMap<>());
+        Commit commit = new Commit(message, timestamp, null, new TreeMap<>(), null);
         commit.saveCommit();
         Branch curBranch = new Branch("master", commit.getCommitID());
         curBranch.saveBranch();
@@ -141,29 +149,35 @@ public class Repository {
     public static void gitletAddFile(String fileName) {
         isInitialized(null);
         File workFile = new File(CWD, fileName);
-        myException(!workFile.exists() || workFile.isDirectory(), "File does not exist.");
-        if (workFileIsNotCommitFile(fileName, workFile)) {
-            String content = readContentsAsString(workFile);
-            File stagingFile = new File(STAGING_AREA, fileName);
-            writeContents(stagingFile, content);
+        exitPrintMessage(!workFile.exists() || workFile.isDirectory(), "File does not exist.");
+        String content = readContentsAsString(workFile);
+        File stagingFile = new File(STAGING_AREA, fileName);
+        writeContents(stagingFile, content);
+        if (!fileIsNotCommitFile(fileName, stagingFile)) {
+            stagingFile.delete();
+        }
+        Branch curBranch = gitletCurBranch();
+        if (curBranch.getRemoveFile().remove(fileName)) {
+            curBranch.saveBranch();
         }
     }
-    public static void gitletCommit(String message) {
+
+    public static void gitletCommit(String message, String merge) {
         isInitialized(null);
-        List<String> fileNames =  getPathNamesList(STAGING_AREA);
-        myException(fileNames.isEmpty(), "No changes added to the commit.");
         String timestamp = DATE_FORMAT.format(new Date());
         Branch branch = gitletCurBranch();
         Commit curCommit = gitletCurCommit();
-        TreeMap<String, String> files = (curCommit.getFiles() == null) ? new TreeMap<>() : curCommit.getFiles();
+        TreeMap<String, String> files = (curCommit.getFiles() == null)
+                ? new TreeMap<>() : curCommit.getFiles();
         List<String> removeFiles = branch.getRemoveFile();
-        for (String fileName : removeFiles) {
-            myException(!files.containsKey(fileName), "removeFiles not in commitFiles");
-            files.remove(fileName);
-        }
+        List<String> tempList = new ArrayList<>(files.keySet());
+        List<String> stagingFileList =  getPathNamesList(STAGING_AREA);
+        boolean successRemove = tempList.removeIf(removeFiles::contains);
+        exitPrintMessage(!successRemove && stagingFileList.isEmpty(),
+                "No changes added to the commit.");
         removeFiles.clear();
-        List<String> stagingFileNames = getPathNamesList(STAGING_AREA);
-        for (String stagingFileName : stagingFileNames) {
+        files.keySet().retainAll(tempList);
+        for (String stagingFileName : stagingFileList) {
             File file = join(STAGING_AREA, stagingFileName);
             String content = readContentsAsString(file);
             Blob blob = new Blob(stagingFileName, content);
@@ -171,7 +185,7 @@ public class Repository {
             files.put(stagingFileName, blob.getBlobId());
             file.delete();
         }
-        Commit commit = new Commit(message, timestamp, curCommit.getCommitID(), files);
+        Commit commit = new Commit(message, timestamp, curCommit.getCommitID(), files, merge);
         commit.saveCommit();
         branch.modifyCurCommit(commit.getCommitID());
         branch.saveBranch();
@@ -189,7 +203,7 @@ public class Repository {
             File workFile = join(CWD, fileName);
             restrictedDelete(workFile);
         } else {
-            throw new GitletException("No reason to remove the file.");
+            exitPrintMessage(true, "No reason to remove the file.");
         }
     }
     public static void gitletLog() {
@@ -217,6 +231,7 @@ public class Repository {
                 System.out.println(curCommit.getCommitID());
             }
         }
+        exitPrintMessage(true, "Found no commit with that message.");
     }
     public static void gitletStatus() {
         isInitialized(null);
@@ -239,7 +254,7 @@ public class Repository {
             File workFile = new File(CWD, commitFileName);
             if (!workFile.exists()) {
                 modifications.put(commitFileName, "(deleted)");
-            } else if (workFileIsNotCommitFile(commitFileName, workFile)) {
+            } else if (fileIsNotCommitFile(commitFileName, workFile)) {
                 modifications.put(commitFileName, "(modified)");
             }
         }
@@ -276,15 +291,15 @@ public class Repository {
     public static void gitletCreateBranch(String branchName) {
         isInitialized(null);
         List<String> branches = getPathNamesList(BRANCHE_FOLDER);
-        myException(branches.contains(branchName),
+        exitPrintMessage(branches.contains(branchName),
                 "A branch with that name already exists.");
         Branch newBranch = new Branch(branchName, gitletCurCommit().getCommitID());
         newBranch.saveBranch();
     }
     public static void gitletDeleteBranch(String branchName) {
         isInitialized(null);
-        myException(isHaveBranch(branchName), "No such branch exists.");
-        myException(Objects.equals(gitletCurBranch().getBranchName(), branchName),
+        exitPrintMessage(isHaveBranch(branchName), "No such branch exists.");
+        exitPrintMessage(Objects.equals(gitletCurBranch().getBranchName(), branchName),
                 "Cannot remove the current branch.");
         File branch = new File(BRANCHE_FOLDER, branchName);
         branch.delete();
@@ -293,20 +308,31 @@ public class Repository {
         isInitialized(null);
         gitletCheckoutCommitFile(gitletCurCommit().getCommitID(), fileName);
     }
-    public static void gitletCheckoutCommitFile(String commitId, String fileName) {
-        isInitialized(null);
+    private static String findMatchingCommitId(String commitId) {
         List<String> commitIds = getPathNamesList(COMMIT_FOLDER);
-        myException(!commitIds.contains(commitId), "No commit with that id exists.");
-        String commitBoldId = Commit.fromFile(commitId).getBlobId(fileName);
-        myException(commitBoldId == null, "File does not exist in that commit.");
+        int prefixLength = Math.max(commitId.length(), 5); // 最少截取前5个字符
+        String prefixCommitId = commitId.substring(0, prefixLength);
+        for (String id : commitIds) {
+            if (id.startsWith(prefixCommitId)) {
+                return id; // 找到匹配的提交 ID，返回完整的提交 ID
+            }
+        }
+        return null; // 没有找到匹配的提交 ID，返回 null
+    }
+    public static void gitletCheckoutCommitFile(String shortCommitId, String fileName) {
+        isInitialized(null);
+        String commitId = findMatchingCommitId(shortCommitId);
+        exitPrintMessage(commitId == null, "No commit with that id exists.");
+        String commitBoldId = Objects.requireNonNull(Commit.fromFile(commitId)).getBlobId(fileName);
+        exitPrintMessage(commitBoldId == null, "File does not exist in that commit.");
         Blob commitBold = Blob.fromFile(commitBoldId);
         File workfile = new File(CWD, fileName);
         writeContents(workfile, commitBold.getContent());
     }
     public static void gitletCheckoutBranch(String branchName) {
         isInitialized(null);
-        myException(isHaveBranch(branchName), "No such branch exists.");
-        myException(Objects.equals(gitletCurBranch().getBranchName(), branchName),
+        exitPrintMessage(isHaveBranch(branchName), "No such branch exists.");
+        exitPrintMessage(Objects.equals(gitletCurBranch().getBranchName(), branchName),
                 "No need to checkout the current branch.");
         resetCommit(Branch.fromFile(branchName).getCurCommit().getCommitID());
         writeContents(CUR_BRANCHES, branchName);
@@ -322,12 +348,12 @@ public class Repository {
     public static void gitletMerge(String branchName) {
         isInitialized(null);
         isHaveUnTrackedFile();
-        myException(isHaveBranch(branchName), "No such branch exists.");
+        exitPrintMessage(isHaveBranch(branchName), "No such branch exists.");
         Branch giveBranch = Branch.fromFile(branchName);
         Commit curCommit = gitletCurCommit();
         Commit otherCommit = giveBranch.getCurCommit();
         Commit splitCommit = findSplitPoint(curCommit, otherCommit);
-        myException(splitCommit == null, "No SplitCommit");
+        exitPrintMessage(splitCommit == null, "No SplitCommit");
         if (Objects.equals(curCommit.getCommitID(), splitCommit.getCommitID())) {
             resetCommit(Branch.fromFile(branchName).getCurCommit().getCommitID());
             gitletCurBranch().modifyCurCommit(otherCommit.getCommitID());
@@ -358,7 +384,8 @@ public class Repository {
                     File stagingFile = new File(STAGING_AREA, fileName);
                     writeContents(stagingFile, content);
                 } else {
-                    if (Objects.equals(curChangeFileBoldId, otherChangeFileBoldId)) { // 若添加 或者 修改的文件 具有不同的内容 处罚冲突
+                    if (Objects.equals(curChangeFileBoldId, otherChangeFileBoldId)) {
+                        // 若添加 或者 修改的文件 具有不同的内容 处罚冲突
                         conflict = true;
                         Blob curBolb = Blob.fromFile(curChangeFileBoldId);
                         Blob otherBolb = Blob.fromFile(otherChangeFileBoldId);
@@ -391,7 +418,11 @@ public class Repository {
             if (conflict) {
                 System.out.println("Encountered a merge conflict.");
             } else {
-                System.out.printf("Merged %s into %s%n", branchName, gitletCurBranch().getBranchName());
+                String curBranchName = gitletCurBranch().getBranchName();
+                String message = "Merged " + branchName + " into " + curBranchName;
+                String merge = curCommit.getCommitID().substring(0, 7) + " "
+                        + otherCommit.getParentCommit().substring(0, 7);
+                gitletCommit(message, merge);
                 giveBranch.modifyCurCommit(curCommit.getCommitID());
                 giveBranch.saveBranch();
             }

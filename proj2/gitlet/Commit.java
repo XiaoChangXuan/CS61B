@@ -28,6 +28,7 @@ public class Commit implements Serializable {
     /** The unique ID (hash) of this Commit. */
     private final String commitID;
     /** The parent commit of this Commit. */
+    private final String merge;
     private final String parentCommit;
     /** The files included in this Commit. */
     private final TreeMap<String, String> files;
@@ -36,13 +37,14 @@ public class Commit implements Serializable {
      *  @param timestamp The commit timestamp.
      *  @param parentCommit The parent commit of this commit.
      */
-    public Commit(String message, String timestamp,
-                  String parentCommit, TreeMap<String, String> files) {
+    public Commit(String message, String timestamp, String parentCommit,
+                  TreeMap<String, String> files, String merge) {
         this.message = message;
         this.timestamp = timestamp;
         this.parentCommit = parentCommit;
         this.files = files;
         this.commitID = createCommitId();
+        this.merge = merge;
     }
     private String createCommitId() {
         List<Object> vals = new ArrayList<>();
@@ -65,6 +67,9 @@ public class Commit implements Serializable {
     }
     public String getCommitID() {
         return this.commitID;
+    }
+    public String getMerge() {
+        return this.merge;
     }
     public String getParentCommit() {
         return this.parentCommit;

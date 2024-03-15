@@ -20,8 +20,8 @@ public class Repository {
      */
 
     /** The current working directory. */
-    //public static final File CWD = join(new File(System.getProperty("user.dir")), "workstation");
-    public static final File CWD = new File(System.getProperty("user.dir"));
+    public static final File CWD = join(new File(System.getProperty("user.dir")), "workstation");
+    // public static final File CWD = new File(System.getProperty("user.dir"));
     /** The .gitlet directory. */
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     public static final File STAGING_AREA = join(GITLET_DIR, ".staging");
@@ -66,13 +66,14 @@ public class Repository {
                     "A Gitlet version-control system already exists in the current directory.");
         }
     }
-    private static void isHaveUnTrackedFile() {
+    private static List<String> isHaveUnTrackedFile() {
         List<String> unTrackedFileNames = getPathNamesList(CWD);
         List<String> stageFiles = getPathNamesList(STAGING_AREA);
         unTrackedFileNames.removeIf(file -> gitletCurCommit().getFiles().containsKey(file)
                 || gitletCurBranch().getRemoveFile().contains(file) || stageFiles.contains(file));
         exitPrintMessage(!unTrackedFileNames.isEmpty(),
                 "There is an untracked file in the way; delete it, or add and commit it first.");
+        return unTrackedFileNames;
     }
     private static boolean isHaveBranch(String branchName) {
         List<String> branches = getPathNamesList(BRANCHE_FOLDER);
@@ -103,10 +104,10 @@ public class Repository {
         String data = commit.getTimestamp();
         String message = commit.getMessage();
         System.out.println("===");
+        System.out.println("commit " + commitId);
         if (merge != null) {
             System.out.println("Merge: " + merge);
         }
-        System.out.println("commit " + commitId);
         System.out.println("Date: " + data);
         System.out.println(message);
         System.out.println();
@@ -116,23 +117,36 @@ public class Repository {
         return (nameList == null)
                 ? new ArrayList<>() : new ArrayList<>(Objects.requireNonNull(nameList));
     }
-    private static void clearPathFiles() {
-        List<String> curWorkFileNames = getPathNamesList(Repository.CWD);
-        for (String curWorkFileName : curWorkFileNames) {
-            File curWorkFile = new File(Repository.CWD, curWorkFileName);
-            curWorkFile.delete();
-        }
+    private static List<String> commitFileNameList(String commitId) {
+        Commit commit = Commit.fromFile(commitId);
+        return commit != null ? new ArrayList<>(commit.getFiles().keySet()) : new ArrayList<>();
+
     }
     private static void resetCommit(String commitId) {
+        isHaveCommitId(commitId);
         isHaveUnTrackedFile();
-        // clear workstation
-        clearPathFiles();
-        // write into workstation
-        Commit checkoutCommit = Commit.fromFile(commitId);
-        List<String> checkoutCommitFileNames = new ArrayList<>(checkoutCommit.getFiles().keySet());
-        for (String checkoutCommitFileName : checkoutCommitFileNames) {
-            gitletCheckoutCommitFile(checkoutCommit.getCommitID(), checkoutCommitFileName);
+        List<String> stageFileList = getPathNamesList(STAGING_AREA);
+        // 清除缓存区
+        for (String fileName : stageFileList) {
+            new File(STAGING_AREA, fileName).delete();
         }
+        List<String> checkoutCommitFileNames = commitFileNameList(commitId);
+        // write into workstation
+        for (String checkoutCommitFileName : checkoutCommitFileNames) {
+            gitletCheckoutCommitFile(commitId, checkoutCommitFileName);
+        }
+    }
+    private static String isHaveCommitId(String commitId) {
+        List<String> commitIds = getPathNamesList(COMMIT_FOLDER);
+        int prefixLength = Math.max(commitId.length(), 5); // 最少截取前5个字符
+        String prefixCommitId = commitId.substring(0, prefixLength);
+        for (String id : commitIds) {
+            if (id.startsWith(prefixCommitId)) {
+                return id; // 找到匹配的提交 ID，返回完整的提交 ID
+            }
+        }
+        exitPrintMessage(true, "No commit with that id exists.");
+        return null; // 没有找到匹配的提交 ID，返回 null
     }
     // Main function
     public static void gitletInitial() {
@@ -229,6 +243,7 @@ public class Repository {
             String curMessage = curCommit.getMessage();
             if (message.equals(curMessage)) {
                 System.out.println(curCommit.getCommitID());
+                return;
             }
         }
         exitPrintMessage(true, "Found no commit with that message.");
@@ -243,10 +258,7 @@ public class Repository {
         List<String> stageFiles = getPathNamesList(STAGING_AREA);
         List<String> removeFiles = curBranch.getRemoveFile();
         HashMap<String, String> modifications = new HashMap<>();
-        List<String> unTrackedFiles = getPathNamesList(CWD);
-        // UnTrackedFiles
-        unTrackedFiles.removeIf(file -> commitFiles.containsKey(file)
-                || removeFiles.contains(file));
+        List<String> unTrackedFiles = isHaveUnTrackedFile();
         // Files modified but not staged
         commitFileNames.removeIf(stageFiles::contains);
         commitFileNames.removeIf(removeFiles::contains);
@@ -298,7 +310,7 @@ public class Repository {
     }
     public static void gitletDeleteBranch(String branchName) {
         isInitialized(null);
-        exitPrintMessage(isHaveBranch(branchName), "No such branch exists.");
+        exitPrintMessage(isHaveBranch(branchName), "A branch with that name does not exist");
         exitPrintMessage(Objects.equals(gitletCurBranch().getBranchName(), branchName),
                 "Cannot remove the current branch.");
         File branch = new File(BRANCHE_FOLDER, branchName);
@@ -308,21 +320,9 @@ public class Repository {
         isInitialized(null);
         gitletCheckoutCommitFile(gitletCurCommit().getCommitID(), fileName);
     }
-    private static String findMatchingCommitId(String commitId) {
-        List<String> commitIds = getPathNamesList(COMMIT_FOLDER);
-        int prefixLength = Math.max(commitId.length(), 5); // 最少截取前5个字符
-        String prefixCommitId = commitId.substring(0, prefixLength);
-        for (String id : commitIds) {
-            if (id.startsWith(prefixCommitId)) {
-                return id; // 找到匹配的提交 ID，返回完整的提交 ID
-            }
-        }
-        return null; // 没有找到匹配的提交 ID，返回 null
-    }
     public static void gitletCheckoutCommitFile(String shortCommitId, String fileName) {
         isInitialized(null);
-        String commitId = findMatchingCommitId(shortCommitId);
-        exitPrintMessage(commitId == null, "No commit with that id exists.");
+        String commitId = isHaveCommitId(shortCommitId);
         String commitBoldId = Objects.requireNonNull(Commit.fromFile(commitId)).getBlobId(fileName);
         exitPrintMessage(commitBoldId == null, "File does not exist in that commit.");
         Blob commitBold = Blob.fromFile(commitBoldId);
@@ -340,6 +340,7 @@ public class Repository {
 
     public static void gitletReset(String commitId) {
         isInitialized(null);
+        isHaveCommitId(commitId);
         resetCommit(commitId);
         Branch branch = gitletCurBranch();
         branch.modifyCurCommit(commitId);
@@ -349,6 +350,8 @@ public class Repository {
         isInitialized(null);
         isHaveUnTrackedFile();
         exitPrintMessage(isHaveBranch(branchName), "No such branch exists.");
+        exitPrintMessage(Objects.equals(branchName, gitletCurBranch().getBranchName()),
+                "Cannot merge a branch with itself.");
         Branch giveBranch = Branch.fromFile(branchName);
         Commit curCommit = gitletCurCommit();
         Commit otherCommit = giveBranch.getCurCommit();
@@ -358,12 +361,11 @@ public class Repository {
             resetCommit(Branch.fromFile(branchName).getCurCommit().getCommitID());
             gitletCurBranch().modifyCurCommit(otherCommit.getCommitID());
             gitletCurBranch().saveBranch();
-            System.out.println("Current branch fast-forwarded.");
-            System.exit(1);
+            exitPrintMessage(true, "Current branch fast-forwarded.");
         } else if (Objects.equals(otherCommit.getCommitID(), splitCommit.getCommitID())) {
             giveBranch.modifyCurCommit(curCommit.getCommitID());
             giveBranch.saveBranch();
-            System.out.println("Given branch is an ancestor of the current branch.");
+            exitPrintMessage(true, "Given branch is an ancestor of the current branch.");
         } else {
             TreeMap<String, String> otherCommitFiles = otherCommit.getFiles();
             TreeMap<String, String> splitCommitFiles = splitCommit.getFiles();
@@ -402,6 +404,7 @@ public class Repository {
                     new File(CWD, splitFile).delete();
                 } else if (curChangedFiles.containsKey(splitFile)
                         && !otherCommitFiles.containsKey(splitFile)) {
+                    conflict = true;
                     // 文件在一个分支删除,在另一个分支修改
                     Blob curBolb = Blob.fromFile(curCommit.getFiles().get(splitFile));
                     String content = mergeFiles(curBolb.getContent(), "");
@@ -409,6 +412,7 @@ public class Repository {
                     writeContents(workFile, content);
                 } else if (!curChangedFiles.containsKey(splitFile)
                         && otherCommitFiles.containsKey(splitFile)) {
+                    conflict = true;
                     Blob otherBolb = Blob.fromFile(otherCommitFiles.get(splitFile));
                     String content = mergeFiles("", otherBolb.getContent());
                     File workFile = new File(CWD, splitFile);
@@ -416,7 +420,7 @@ public class Repository {
                 }
             }
             if (conflict) {
-                System.out.println("Encountered a merge conflict.");
+                exitPrintMessage(true, "Encountered a merge conflict.");
             } else {
                 String curBranchName = gitletCurBranch().getBranchName();
                 String message = "Merged " + branchName + " into " + curBranchName;
@@ -428,17 +432,14 @@ public class Repository {
             }
         }
     }
-
     private static Commit findSplitPoint(Commit commit1, Commit commit2) {
         Set<String> ancestors = new HashSet<>();
-
         // 将 commit1 的所有祖先加入 HashSet
         Commit pointer1 = commit1;
         while (pointer1 != null) {
             ancestors.add(pointer1.getCommitID());
             pointer1 = Commit.fromFile(pointer1.getParentCommit());
         }
-
         // 遍历 commit2 的祖先，查看是否存在于 HashSet 中
         Commit pointer2 = commit2;
         while (pointer2 != null) {

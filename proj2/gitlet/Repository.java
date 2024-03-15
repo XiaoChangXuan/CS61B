@@ -71,8 +71,6 @@ public class Repository {
         List<String> stageFiles = getPathNamesList(STAGING_AREA);
         unTrackedFileNames.removeIf(file -> gitletCurCommit().getFiles().containsKey(file)
                 || gitletCurBranch().getRemoveFile().contains(file) || stageFiles.contains(file));
-        exitPrintMessage(!unTrackedFileNames.isEmpty(),
-                "There is an untracked file in the way; delete it, or add and commit it first.");
         return unTrackedFileNames;
     }
     private static boolean isHaveBranch(String branchName) {
@@ -122,14 +120,18 @@ public class Repository {
         return commit != null ? new ArrayList<>(commit.getFiles().keySet()) : new ArrayList<>();
 
     }
-    private static void resetCommit(String commitId) {
-        isHaveCommitId(commitId);
-        isHaveUnTrackedFile();
-        List<String> stageFileList = getPathNamesList(STAGING_AREA);
+    private static void clearPathList(File path) {
+        List<String> stageFileList = getPathNamesList(path);
         // 清除缓存区
         for (String fileName : stageFileList) {
-            new File(STAGING_AREA, fileName).delete();
+            new File(path, fileName).delete();
         }
+    }
+    private static void addGiveCommitFiles(String commitId) {
+        isHaveCommitId(commitId);
+        exitPrintMessage(!isHaveUnTrackedFile().isEmpty(),
+                "There is an untracked file in the way; delete it, or add and commit it first.");
+        clearPathList(STAGING_AREA);
         List<String> checkoutCommitFileNames = commitFileNameList(commitId);
         // write into workstation
         for (String checkoutCommitFileName : checkoutCommitFileNames) {
@@ -238,15 +240,16 @@ public class Repository {
     public static void gitletFindMessage(String message) {
         isInitialized(null);
         List<String> commitIds = getPathNamesList(COMMIT_FOLDER);
+        boolean print = false;
         for (String commitId : commitIds) {
             Commit curCommit = Commit.fromFile(commitId);
             String curMessage = curCommit.getMessage();
             if (message.equals(curMessage)) {
                 System.out.println(curCommit.getCommitID());
-                return;
+                print = true;
             }
         }
-        exitPrintMessage(true, "Found no commit with that message.");
+        exitPrintMessage(!print, "Found no commit with that message.");
     }
     public static void gitletStatus() {
         isInitialized(null);
@@ -334,22 +337,25 @@ public class Repository {
         exitPrintMessage(isHaveBranch(branchName), "No such branch exists.");
         exitPrintMessage(Objects.equals(gitletCurBranch().getBranchName(), branchName),
                 "No need to checkout the current branch.");
-        resetCommit(Branch.fromFile(branchName).getCurCommit().getCommitID());
+        // 清除当前目录文件
+        clearPathList(CWD);
+        addGiveCommitFiles(Branch.fromFile(branchName).getCurCommit().getCommitID());
         writeContents(CUR_BRANCHES, branchName);
     }
 
     public static void gitletReset(String commitId) {
         isInitialized(null);
         isHaveCommitId(commitId);
-        resetCommit(commitId);
+        addGiveCommitFiles(commitId);
         Branch branch = gitletCurBranch();
         branch.modifyCurCommit(commitId);
         branch.saveBranch();
     }
     public static void gitletMerge(String branchName) {
         isInitialized(null);
-        isHaveUnTrackedFile();
-        exitPrintMessage(isHaveBranch(branchName), "No such branch exists.");
+        exitPrintMessage(!isHaveUnTrackedFile().isEmpty(),
+                "There is an untracked file in the way; delete it, or add and commit it first.");
+        exitPrintMessage(isHaveBranch(branchName), "A branch with that name does not exist.");
         exitPrintMessage(Objects.equals(branchName, gitletCurBranch().getBranchName()),
                 "Cannot merge a branch with itself.");
         Branch giveBranch = Branch.fromFile(branchName);
@@ -358,7 +364,7 @@ public class Repository {
         Commit splitCommit = findSplitPoint(curCommit, otherCommit);
         exitPrintMessage(splitCommit == null, "No SplitCommit");
         if (Objects.equals(curCommit.getCommitID(), splitCommit.getCommitID())) {
-            resetCommit(Branch.fromFile(branchName).getCurCommit().getCommitID());
+            addGiveCommitFiles(Branch.fromFile(branchName).getCurCommit().getCommitID());
             gitletCurBranch().modifyCurCommit(otherCommit.getCommitID());
             gitletCurBranch().saveBranch();
             exitPrintMessage(true, "Current branch fast-forwarded.");
@@ -423,7 +429,7 @@ public class Repository {
                 exitPrintMessage(true, "Encountered a merge conflict.");
             } else {
                 String curBranchName = gitletCurBranch().getBranchName();
-                String message = "Merged " + branchName + " into " + curBranchName;
+                String message = "Merged " + branchName + " into " + curBranchName + ".";
                 String merge = curCommit.getCommitID().substring(0, 7) + " "
                         + otherCommit.getParentCommit().substring(0, 7);
                 gitletCommit(message, merge);
